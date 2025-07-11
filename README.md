@@ -1,3 +1,65 @@
+# Описание API
+
+## Endpoints
+
+### 1. Создание новой игры
+`POST /api/games`
+
+**Ответ (201 Created):**
+```json
+{
+  "id": "1",
+  "boardSize": 3,
+  "status": "InProgress"
+}
+```
+
+### 2. Получение состояния игры
+`GET /api/games/{id}`
+
+**Ответ (200 OK):**
+```json
+{
+  "boardState": "X-O-XO--X",
+  "currentPlayer": "O",
+  "status": "InProgress"
+}
+```
+
+### 3. Совершение хода
+`POST /api/games/{id}/moves`
+
+**Запрос:**
+```json
+{
+  "player": "X",
+  "row": 1,
+  "col": 1
+}
+```
+
+**Ответ (200 OK):**
+```json
+{
+  "newBoardState": "X-OXXO--X",
+  "status": "XWon"
+}
+```
+
+## Коды ошибок
+`400 Bad Request` - Некорректный ход
+`404 Not Found` - Игра не найдена
+`409 Conflict` - Игра завершена
+`412 Precondition Failed` - Конфликт версий
+
+# Описание архитектуры
+
+1. Controllers - только HTTP-запросы/ответы
+2. Services - правила игры, проверка ходов, определение победителя
+3. Repositories - работа с БД: CRUD операций, EF Core
+4. Models - сущности БД: Game, Move...
+5. DTOs - передача данных
+
 # Задача #1 на стажировку backend разработчик Банка C#/PostgreSQL
 
 Спроектируйте и реализуйте REST API для игры в крестики нолики
