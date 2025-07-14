@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicTacToe.API", "TicTacToe.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicTacToe.UnitTests", "..\TicTacToe.UnitTests\TicTacToe.UnitTests.csproj", "{2C549175-8223-46A1-BDBD-D50A48DCA439}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicTacToe.IntegrationTests", "..\IntegrationTests\TicTacToe.IntegrationTests.csproj", "{906FDA22-AE62-4F0A-82CC-B17B29313E61}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicTacToe.IntegrationTests", "..\TicTacToe.IntegrationTests\TicTacToe.IntegrationTests.csproj", "{906FDA22-AE62-4F0A-82CC-B17B29313E61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
