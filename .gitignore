@@ -3,3 +3,11 @@
 ################################################################################
 
 /.vs
+/TicTacToe.UnitTests/bin
+/TicTacToe.UnitTests/obj
+/TicTacToe.UnitTests/results
+/TicTacToe.UnitTests/TestResults
+/IntegrationTests/bin
+/IntegrationTests/obj
+/TicTacToe.IntegrationTests/bin
+/TicTacToe.IntegrationTests/obj

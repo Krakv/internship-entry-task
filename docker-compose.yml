@@ -31,6 +31,8 @@ services:
       - GameSettings__WinnerLineLength=${WINNER_LINE_LENGTH:-3}
       - GameSettings__SignChangeChance=${SIGN_CHANGE_CHANCE:-10}
       
+      - Redis__Host=${REDIS_HOST:-redis}
+      
       - ConnectionStrings__DefaultConnection=Host=tic-tac-toe-db;Port=5432;Database=${DB_NAME:-tic_tac_toe};Username=${DB_USER:-admin};Password=${DB_PASSWORD:-admin}
     depends_on:
       tic-tac-toe-db:
@@ -38,9 +40,20 @@ services:
     networks:
       - tic-tac-toe-api-network
     restart: unless-stopped
-
+   
+  redis:
+    container_name: redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - tic-tac-toe-api-network
+      
 volumes:
   postgres_data:
+  redis-data:
 
 networks:
   tic-tac-toe-api-network:

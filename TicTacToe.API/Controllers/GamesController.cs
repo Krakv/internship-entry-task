@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TicTacToe.API.Models;
-using TicTacToe.API.Repositories;
+using TicTacToe.API.DTOs;
+using TicTacToe.API.Services;
 
 namespace TicTacToe.API.Controllers
 {
@@ -8,13 +8,11 @@ namespace TicTacToe.API.Controllers
     [ApiController]
     public class GamesController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly GameFactory _gameFactory;
+        private readonly IGameService _gameService;
 
-        public GamesController(AppDbContext context, GameFactory gameFactory)
+        public GamesController(IGameService gameService)
         {
-            _context = context;
-            _gameFactory = gameFactory;
+            _gameService = gameService;
         }
 
         [HttpGet("{id}")]
@@ -22,10 +20,13 @@ namespace TicTacToe.API.Controllers
         {
             try
             {
-                var game = await _context.Games.FindAsync(id);
-
-                if (game == null) return NotFound();
-                else return Ok(game);
+                var game = await _gameService.GetGameAsync(id);
+                return game == null ? NotFound() : Ok(
+                    new GameDto() { 
+                        BoardState = game.BoardState, 
+                        CurrentPlayer = game.CurrentPlayer, 
+                        Status = game.Status
+                    });
             }
             catch (Exception e)
             {
@@ -38,12 +39,14 @@ namespace TicTacToe.API.Controllers
         {
             try
             {
-                var game = _gameFactory.CreateGame();
-
-                await _context.Games.AddAsync(game);
-                await _context.SaveChangesAsync();
-
-                return CreatedAtAction(nameof(GetGame), new { game.Id }, null);
+                var game = await _gameService.CreateGameAsync();
+                return Created($"/api/games/{game.Id}", 
+                    new CreatedGameDto () 
+                    { 
+                        Id = game.Id, 
+                        BoardSize = game.BoardSize, 
+                        Status = game.Status
+                    });
             }
             catch (Exception e)
             {

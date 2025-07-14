@@ -10,7 +10,7 @@ namespace TicTacToe.API.Repositories
         {
         }
 
-        public DbSet<Game> Games { get; set; }
-        public DbSet<Move> Moves { get; set; }
+        public virtual DbSet<Game> Games { get; set; }
+        public virtual DbSet<Move> Moves { get; set; }
     }
 }

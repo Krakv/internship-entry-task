@@ -8,5 +8,6 @@
         public int GameId { get; set; }
         public Game Game { get; set; }
         public Player Player { get; set; }
+        public DateTime MoveTime { get; set; } = DateTime.UtcNow;
     }
 }
