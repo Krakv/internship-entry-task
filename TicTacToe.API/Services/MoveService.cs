@@ -9,6 +9,9 @@ using TicTacToe.API.Repositories;
 
 namespace TicTacToe.API.Services
 {
+    /// <summary>
+    /// Реализация сервиса для работы с ходами
+    /// </summary>
     public class MoveService : IMoveService
     {
         private readonly IGameRepository _gameRepository;
@@ -16,6 +19,12 @@ namespace TicTacToe.API.Services
         private readonly ICacheService _cacheService;
         private readonly Random _random = new();
 
+        /// <summary>
+        /// Инициализирует сервис ходов
+        /// </summary>
+        /// <param name="gameRepository">Репозиторий игр</param>
+        /// <param name="moveRepository">Репозиторий ходов</param>
+        /// <param name="cacheService">Сервис кэширования</param>
         public MoveService(IGameRepository gameRepository, IMoveRepository moveRepository, ICacheService cacheService)
         {
             _gameRepository = gameRepository;
@@ -23,6 +32,7 @@ namespace TicTacToe.API.Services
             _cacheService = cacheService;
         }
 
+        /// <inheritdoc/>
         public async Task<CachedMoveResult?> GetCachedMoveResultAsync(int gameId, MoveDto moveDto)
         {
             var key = GenerateMoveCacheKey(gameId, moveDto);
@@ -33,6 +43,7 @@ namespace TicTacToe.API.Services
             return JsonSerializer.Deserialize<CachedMoveResult>(cachedJson!);
         }
 
+        /// <inheritdoc/>
         public async Task CacheMoveResultAsync(int gameId, MoveDto moveDto, CreatedMoveDto response, string etag)
         {
             var key = GenerateMoveCacheKey(gameId, moveDto);
@@ -47,6 +58,9 @@ namespace TicTacToe.API.Services
             await _cacheService.SetAsync<string>(key, json, TimeSpan.FromHours(1));
         }
 
+        /// <summary>
+        /// Генерирует ключ для кэширования хода
+        /// </summary>
         private string GenerateMoveCacheKey(int gameId, MoveDto moveDto)
         {
             var raw = $"{gameId}:{moveDto.Player}:{moveDto.Row}:{moveDto.Col}";
@@ -56,6 +70,7 @@ namespace TicTacToe.API.Services
             return $"move:{Convert.ToBase64String(hash)}";
         }
 
+        /// <inheritdoc/>
         public async Task<Game> MakeMoveAsync(int gameId, MoveDto moveDto)
         {
             var game = await _gameRepository.GetByIdAsync(gameId) ?? throw new ArgumentException("Game not found");
@@ -99,6 +114,7 @@ namespace TicTacToe.API.Services
             return game;
         }
 
+        /// <inheritdoc/>
         public bool IsValidMove(Game game, MoveDto moveDto, out string message)
         {
             if (game == null)
@@ -151,6 +167,9 @@ namespace TicTacToe.API.Services
             return true;
         }
 
+        /// <summary>
+        /// Обновляет состояние игрового поля после хода
+        /// </summary>
         private string UpdateBoardState(string currentState, MoveDto moveDto)
         {
             var boardSize = (int)Math.Sqrt(currentState.Length);
@@ -160,6 +179,9 @@ namespace TicTacToe.API.Services
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Проверяет наличие победителя
+        /// </summary>
         public bool CheckWinner(string board, int boardSize, int winnerLineLength)
         {
             int size = boardSize;
@@ -240,6 +262,9 @@ namespace TicTacToe.API.Services
             return false;
         }
 
+        /// <summary>
+        /// Проверяет заполнено ли игровое поле
+        /// </summary>
         public bool IsBoardFull(string board)
         {
             return !board.Contains('-');

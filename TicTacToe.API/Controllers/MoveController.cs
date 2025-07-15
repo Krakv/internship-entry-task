@@ -8,6 +8,9 @@ using TicTacToe.API.Services;
 
 namespace TicTacToe.API.Controllers
 {
+    /// <summary>
+    /// Контроллер для управления ходами в игре крестики-нолики
+    /// </summary>
     [Route("api/games/{gameId}/[controller]")]
     [ApiController]
     public class MovesController : ControllerBase
@@ -15,12 +18,29 @@ namespace TicTacToe.API.Controllers
         private readonly IMoveService _moveService;
         private readonly ILogger<MovesController> _logger;
 
+        /// <summary>
+        /// Конструктор контроллера ходов
+        /// </summary>
+        /// <param name="moveService">Сервис для работы с ходами</param>
+        /// <param name="logger">Логгер для записи событий</param>
         public MovesController(IMoveService moveService, ILogger<MovesController> logger)
         {
             _moveService = moveService;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Совершает ход в указанной игре
+        /// </summary>
+        /// <param name="gameId">Идентификатор игры</param>
+        /// <param name="moveDto">Данные хода (позиция и игрок)</param>
+        /// <returns>
+        /// Возвращает статус 200 (OK) с результатом хода, если ход успешно выполнен.
+        /// Возвращает статус 404 (Not Found), если игра не найдена.
+        /// Возвращает статус 409 (Conflict), если игра уже завершена.
+        /// Возвращает статус 400 (Bad Request) при некорректных данных хода.
+        /// Возвращает статус 500 (Internal Server Error) при внутренней ошибке сервера.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> MakeMove(int gameId, [FromBody] MoveDto moveDto)
         {
@@ -88,6 +108,11 @@ namespace TicTacToe.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Генерирует ETag для текущего состояния игры
+        /// </summary>
+        /// <param name="game">Объект игры</param>
+        /// <returns>Хеш-строка, представляющая текущее состояние игры</returns>
         private string GenerateETag(Game game)
         {
             var json = JsonSerializer.Serialize(game.BoardState);
@@ -95,6 +120,5 @@ namespace TicTacToe.API.Controllers
             var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(json));
             return Convert.ToBase64String(hash);
         }
-
     }
 }
