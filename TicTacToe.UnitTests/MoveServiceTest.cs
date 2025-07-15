@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using TicTacToe.API.DTOs;
 using TicTacToe.API.Models;

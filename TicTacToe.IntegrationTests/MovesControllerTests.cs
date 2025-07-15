@@ -92,7 +92,6 @@ namespace TicTacToe.API.IntegrationTests
         [Fact]
         public async Task MakeMove_InvalidOperation_ThrowsBadRequest()
         {
-            // Arrange
             int gameId = 5;
             var moveDto = new MoveDto { Player = Player.X, Row = 0, Col = 0 };
 

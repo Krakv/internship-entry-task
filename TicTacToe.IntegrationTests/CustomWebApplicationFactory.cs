@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
-using StackExchange.Redis;
 using TicTacToe.API.Services;
 using TicTacToe.IntegrationTests;
 

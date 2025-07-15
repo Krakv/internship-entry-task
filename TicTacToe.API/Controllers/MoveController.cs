@@ -13,10 +13,12 @@ namespace TicTacToe.API.Controllers
     public class MovesController : ControllerBase
     {
         private readonly IMoveService _moveService;
+        private readonly ILogger<MovesController> _logger;
 
-        public MovesController(IMoveService moveService)
+        public MovesController(IMoveService moveService, ILogger<MovesController> logger)
         {
             _moveService = moveService;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -24,6 +26,7 @@ namespace TicTacToe.API.Controllers
         {
             try
             {
+                _logger.LogTrace("Начало обработки хода игры {GameId}", gameId);
                 var existingResult = await _moveService.GetCachedMoveResultAsync(gameId, moveDto);
                 if (existingResult != null)
                 {
@@ -34,10 +37,16 @@ namespace TicTacToe.API.Controllers
                 var game = await _moveService.MakeMoveAsync(gameId, moveDto);
 
                 if (game == null)
+                {
+                    _logger.LogWarning("Игра с ID:{GameId} не найдена.", gameId);
                     return NotFound("Game not found");
+                }
 
                 if (game.Status != Models.GameStatus.InProgress)
+                {
+                    _logger.LogWarning("Игра с ID:{GameId} уже завершена.", gameId);
                     return Conflict("Game has been finished");
+                }
 
                 var etag = GenerateETag(game);
 
@@ -54,6 +63,7 @@ namespace TicTacToe.API.Controllers
             }
             catch (JsonException)
             {
+                _logger.LogWarning("Некорректный JSON введен для игры {GameId}", gameId);
                 return BadRequest(new ProblemDetails
                 {
                     Title = "Invalid JSON",
@@ -63,14 +73,17 @@ namespace TicTacToe.API.Controllers
             }
             catch (ArgumentException ex)
             {
+                _logger.LogWarning("Игра с ID:{GameId} не найдена. {Exception}", gameId, ex);
                 return NotFound(ex.Message);
             }
             catch (InvalidOperationException ex)
             {
+                _logger.LogWarning("Некорректный ход для игры с ID:{GameId}. {Exception}", gameId, ex);
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                _logger.LogError("Непредвиденная ошибка: {Exception}", ex);
                 return StatusCode(500, ex.Message);
             }
         }

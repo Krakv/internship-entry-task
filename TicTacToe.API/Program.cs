@@ -14,8 +14,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Tic-Tac-Toe API",
-        Version = "v1",
-        Description = "API для игры в крестики-нолики"
+        Version = "v1.1"
     });
 });
 
