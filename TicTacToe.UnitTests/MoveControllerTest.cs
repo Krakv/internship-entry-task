@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using TicTacToe.API.DTOs;
 using TicTacToe.API.Models;
@@ -9,12 +10,15 @@ namespace TicTacToe.API.Controllers
     public class MovesControllerTests
     {
         private readonly Mock<IMoveService> _mockMoveService;
+        private readonly Mock<ILogger<MovesController>> _mockLogger;
         private readonly MovesController _controller;
 
         public MovesControllerTests()
         {
             _mockMoveService = new Mock<IMoveService>();
-            _controller = new MovesController(_mockMoveService.Object);
+            _mockLogger = new Mock<ILogger<MovesController>>();
+
+            _controller = new MovesController(_mockMoveService.Object, _mockLogger.Object);
         }
 
         [Fact]

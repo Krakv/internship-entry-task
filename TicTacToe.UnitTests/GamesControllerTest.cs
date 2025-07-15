@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Castle.Core.Logging;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using TicTacToe.API.DTOs;
 using TicTacToe.API.Models;
@@ -9,12 +11,15 @@ namespace TicTacToe.API.Controllers
     public class GamesControllerTests
     {
         private readonly Mock<IGameService> _mockGameService;
+        private readonly Mock<ILogger<GamesController>> _mockLogger;
         private readonly GamesController _controller;
 
         public GamesControllerTests()
         {
             _mockGameService = new Mock<IGameService>();
-            _controller = new GamesController(_mockGameService.Object);
+            _mockLogger = new Mock<ILogger<GamesController>>();
+
+            _controller = new GamesController(_mockGameService.Object, _mockLogger.Object);
         }
 
         [Fact]
