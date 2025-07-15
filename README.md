@@ -33,9 +33,9 @@ REST API для игры в крестики-нолики NxN.
 **Ответ (201 Created):**
 ```json
 {
-  "id": "1",
-  "boardSize": 3,
-  "status": "InProgress"
+  "Id": "1",
+  "BoardSize": 3,
+  "Status": "InProgress"
 }
 ```
 
@@ -45,9 +45,10 @@ REST API для игры в крестики-нолики NxN.
 **Ответ (200 OK):**
 ```json
 {
-  "boardState": "X-O-XO--X",
-  "currentPlayer": "O",
-  "status": "InProgress"
+  "BoardState": "X-O-XO--X",
+  "WinnerLineLength": 3,
+  "CurrentPlayer": "O",
+  "Status": "InProgress"
 }
 ```
 
@@ -57,24 +58,23 @@ REST API для игры в крестики-нолики NxN.
 **Запрос:**
 ```json
 {
-  "player": "X",
-  "row": 1,
-  "col": 1
+  "Player": "X",
+  "Row": 1,
+  "Col": 1
 }
 ```
 
 **Ответ (200 OK):**
 ```json
 {
-  "newBoardState": "X-OXXO--X",
-  "status": "XWon"
+  "NewBoardState": "X-OXXO--X",
+  "Status": "XWon"
 }
 ```
 
 ## Коды ошибок
 - `400 Bad Request` - Некорректный ход или некорректный JSON
 - `404 Not Found` - Игра не найдена
-- `409 Conflict` - Игра завершена
 
 # Запуск проекта
 1. Запустите через Docker `docker-compose up -d --build`.

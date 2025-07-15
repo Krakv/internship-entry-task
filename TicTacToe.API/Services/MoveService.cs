@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using StackExchange.Redis;
-using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using TicTacToe.API.DTOs;
 using TicTacToe.API.Models;
@@ -37,25 +34,60 @@ namespace TicTacToe.API.Services
         {
             var key = GenerateMoveCacheKey(gameId, moveDto);
             var cachedJson = await _cacheService.GetAsync<string>(key);
-
-            if (string.IsNullOrEmpty(cachedJson)) return null;
-
-            return JsonSerializer.Deserialize<CachedMoveResult>(cachedJson!);
+            return string.IsNullOrEmpty(cachedJson)
+                ? null
+                : JsonSerializer.Deserialize<CachedMoveResult>(cachedJson);
         }
 
         /// <inheritdoc/>
-        public async Task CacheMoveResultAsync(int gameId, MoveDto moveDto, CreatedMoveDto response, string etag)
+        public async Task CacheMoveResultAsync(int gameId, MoveDto moveDto, MoveDto? previousMoveDto, CreatedMoveDto response, string etag)
         {
-            var key = GenerateMoveCacheKey(gameId, moveDto);
+            var previousMove = await _cacheService.GetPreviousMoveAsync(gameId);
 
-            var cacheObj = new CachedMoveResult
+            if (previousMove != null &&
+                previousMove.Row == moveDto.Row &&
+                previousMove.Col == moveDto.Col &&
+                previousMove.Player == moveDto.Player)
             {
-                Response = response,
-                ETag = etag
-            };
+                return;
+            }
 
-            var json = JsonSerializer.Serialize(cacheObj);
-            await _cacheService.SetAsync<string>(key, json, TimeSpan.FromHours(1));
+            var key = GenerateMoveCacheKey(gameId, moveDto);
+            var cacheObj = new CachedMoveResult { Response = response, ETag = etag };
+            await _cacheService.SetAsync(key, JsonSerializer.Serialize(cacheObj));
+
+            await _cacheService.SetPreviousMoveAsync(gameId, moveDto);
+
+            if (previousMove != null)
+            {
+                var oldKey = GenerateMoveCacheKey(gameId, moveDto);
+                await _cacheService.RemoveAsync(oldKey);
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task CacheMoveResultWithCleanupAsync(int gameId, MoveDto currentMove, MoveDto? previousMove, CreatedMoveDto response, string etag)
+        {
+            var currentKey = GenerateMoveCacheKey(gameId, currentMove);
+            var cacheObj = new CachedMoveResult { Response = response, ETag = etag };
+
+            await _cacheService.SetAsync(currentKey, JsonSerializer.Serialize(cacheObj));
+
+            await _cacheService.SetPreviousMoveAsync(gameId, currentMove);
+
+            if (previousMove != null)
+            {
+                var previousKey = GenerateMoveCacheKey(gameId, previousMove);
+                await _cacheService.RemoveAsync(previousKey);
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<MoveDto?> GetPreviousMoveAsync(int gameId)
+        {
+            var key = $"game:{gameId}:last_move";
+            var json = await _cacheService.GetAsync<MoveDto>(key);
+            return json != null ? json : null;
         }
 
         /// <summary>
@@ -63,11 +95,7 @@ namespace TicTacToe.API.Services
         /// </summary>
         private string GenerateMoveCacheKey(int gameId, MoveDto moveDto)
         {
-            var raw = $"{gameId}:{moveDto.Player}:{moveDto.Row}:{moveDto.Col}";
-            using var sha = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(raw);
-            var hash = sha.ComputeHash(bytes);
-            return $"move:{Convert.ToBase64String(hash)}";
+            return $"move:{gameId}:{moveDto.Row}:{moveDto.Col}:{moveDto.Player}";
         }
 
         /// <inheritdoc/>

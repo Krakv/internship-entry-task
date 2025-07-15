@@ -31,7 +31,7 @@ namespace TicTacToe.API.Services
         /// <param name="moveDto">Данные хода</param>
         /// <param name="response">Результат хода</param>
         /// <param name="etag">ETag для валидации</param>
-        Task CacheMoveResultAsync(int gameId, MoveDto moveDto, CreatedMoveDto response, string etag);
+        Task CacheMoveResultAsync(int gameId, MoveDto moveDto, MoveDto? previousMove, CreatedMoveDto response, string etag);
 
         /// <summary>
         /// Проверяет валидность хода
@@ -41,5 +41,8 @@ namespace TicTacToe.API.Services
         /// <param name="message">Сообщение об ошибке</param>
         /// <returns>True если ход валиден</returns>
         bool IsValidMove(Game game, MoveDto moveDto, out string message);
+
+        Task<MoveDto?> GetPreviousMoveAsync(int gameId);
+        Task CacheMoveResultWithCleanupAsync(int gameId, MoveDto currentMove, MoveDto? previousMove, CreatedMoveDto response, string etag);
     }
 }

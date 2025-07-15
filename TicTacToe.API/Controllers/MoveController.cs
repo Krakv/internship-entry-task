@@ -55,12 +55,26 @@ namespace TicTacToe.API.Controllers
             try
             {
                 _logger.LogTrace("Начало обработки хода игры {GameId}", gameId);
+
                 var existingResult = await _moveService.GetCachedMoveResultAsync(gameId, moveDto);
                 if (existingResult != null)
                 {
                     Response.Headers["ETag"] = $"\"{existingResult.ETag}\"";
-
                     return Ok(existingResult.Response);
+                }
+
+                var previousMove = await _moveService.GetPreviousMoveAsync(gameId);
+                if (previousMove != null &&
+                    previousMove.Row == moveDto.Row &&
+                    previousMove.Col == moveDto.Col &&
+                    previousMove.Player == moveDto.Player)
+                {
+                    var previousResult = await _moveService.GetCachedMoveResultAsync(gameId, previousMove);
+                    if (previousResult != null)
+                    {
+                        Response.Headers["ETag"] = $"\"{previousResult.ETag}\"";
+                        return Ok(previousResult.Response);
+                    }
                 }
 
                 var game = await _moveService.MakeMoveAsync(gameId, moveDto);
@@ -71,12 +85,6 @@ namespace TicTacToe.API.Controllers
                     return NotFound("Game not found");
                 }
 
-                if (game.Status != Models.GameStatus.InProgress)
-                {
-                    _logger.LogWarning("Игра с ID:{GameId} уже завершена.", gameId);
-                    return Conflict("Game has been finished");
-                }
-
                 var etag = GenerateETag(game, moveDto);
 
                 var result = new CreatedMoveDto
@@ -85,7 +93,13 @@ namespace TicTacToe.API.Controllers
                     Status = game.Status
                 };
 
-                await _moveService.CacheMoveResultAsync(gameId, moveDto, result, etag);
+                await _moveService.CacheMoveResultWithCleanupAsync(
+                    gameId,
+                    moveDto,
+                    previousMove,
+                    result,
+                    etag
+                );
 
                 Response.Headers.ETag = $"\"{etag}\"";
                 return Ok(result);

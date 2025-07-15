@@ -66,30 +66,6 @@ namespace TicTacToe.API.IntegrationTests
         }
 
         [Fact]
-        public async Task MakeMove_GameFinished_ReturnsConflict()
-        {
-            int gameId = 99;
-            var moveDto = new MoveDto { Player = Player.X, Row = 0, Col = 0 };
-            var finishedGame = new Game(3, 3, 0)
-            {
-                Id = gameId,
-                BoardState = "XXXOOO---",
-                Status = GameStatus.XWon,
-                CurrentPlayer = Player.O
-            };
-
-            _moveServiceMock
-                .Setup(m => m.MakeMoveAsync(gameId, It.IsAny<MoveDto>()))
-                .ReturnsAsync(finishedGame);
-
-            var content = new StringContent(JsonConvert.SerializeObject(moveDto), Encoding.UTF8, "application/json");
-
-            var response = await _client.PostAsync($"/api/games/{gameId}/moves", content);
-
-            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        }
-
-        [Fact]
         public async Task MakeMove_InvalidOperation_ThrowsBadRequest()
         {
             int gameId = 5;

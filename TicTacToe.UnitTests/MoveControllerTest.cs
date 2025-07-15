@@ -23,26 +23,6 @@ namespace TicTacToe.API.Controllers
         }
 
         [Fact]
-        public async Task MakeMove_FinishedGame_ReturnsConflict()
-        {
-            var gameId = 1;
-            var moveDto = new MoveDto { Player = Player.X, Row = 0, Col = 0 };
-            var game = new Game(3, 3, 0)
-            {
-                BoardState = "XXX------",
-                Status = GameStatus.XWon
-            };
-
-            _mockMoveService.Setup(s => s.MakeMoveAsync(gameId, moveDto))
-                .ReturnsAsync(game);
-
-            var result = await _controller.MakeMove(gameId, moveDto);
-
-            var conflictResult = Assert.IsType<ConflictObjectResult>(result);
-            Assert.Equal("Game has been finished", conflictResult.Value);
-        }
-
-        [Fact]
         public async Task MakeMove_GameNotFound_ReturnsNotFound()
         {
             var gameId = 999;
@@ -141,7 +121,7 @@ namespace TicTacToe.API.Controllers
                         return new CachedMoveResult { Response = expectedResponse, ETag = fixedEtag };
                 });
 
-            _mockMoveService.Setup(s => s.CacheMoveResultAsync(gameId, moveDto, expectedResponse, fixedEtag))
+            _mockMoveService.Setup(s => s.CacheMoveResultWithCleanupAsync(gameId, moveDto, null, expectedResponse, fixedEtag))
                 .Returns(Task.CompletedTask);
 
             _mockMoveService.Setup(s => s.MakeMoveAsync(gameId, moveDto))

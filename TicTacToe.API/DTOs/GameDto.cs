@@ -13,6 +13,11 @@ namespace TicTacToe.API.DTOs
         public string BoardState { get; set; }
 
         /// <summary>
+        /// Условие победы
+        /// </summary>
+        public int WinnerLineLength { get; set; }
+
+        /// <summary>
         /// Игрок, чей ход текущий
         /// </summary>
         public Player CurrentPlayer { get; set; }

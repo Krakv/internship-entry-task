@@ -1,4 +1,7 @@
-﻿namespace TicTacToe.API.Services
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using TicTacToe.API.DTOs;
+
+namespace TicTacToe.API.Services
 {
     /// <summary>
     /// Интерфейс сервиса кэширования
@@ -29,5 +32,31 @@
         /// <param name="key">Ключ кэша</param>
         /// <returns>Task</returns>
         Task RemoveAsync(string key);
+
+        /// <summary>
+        /// Сохраняет информацию о последнем выполненном ходе для указанной игры.
+        /// Используется для проверки повторных идентичных ходов.
+        /// </summary>
+        /// <param name="gameId">Идентификатор игры</param>
+        /// <param name="move">Данные хода (координаты и игрок)</param>
+        /// <returns>Task, представляющий асинхронную операцию</returns>
+        Task SetPreviousMoveAsync(int gameId, MoveDto move);
+
+        /// <summary>
+        /// Получает последний сохранённый ход для указанной игры.
+        /// </summary>
+        /// <param name="gameId">Идентификатор игры</param>
+        /// <returns>
+        /// Данные последнего хода или null, если ход не найден или истёк срок хранения
+        /// </returns>
+        Task<MoveDto?> GetPreviousMoveAsync(int gameId);
+
+        /// <summary>
+        /// Удаляет информацию о последнем ходе для указанной игры.
+        /// </summary>
+        /// <param name="gameId">Идентификатор игры</param>
+        /// <returns>Task, представляющий асинхронную операцию</returns>
+        Task ClearPreviousMoveAsync(int gameId);
+
     }
 }

@@ -51,6 +51,7 @@ namespace TicTacToe.API.Controllers
                     new GameDto()
                     {
                         BoardState = game.BoardState,
+                        WinnerLineLength = game.WinnerLineLength,
                         CurrentPlayer = game.CurrentPlayer,
                         Status = game.Status
                     });

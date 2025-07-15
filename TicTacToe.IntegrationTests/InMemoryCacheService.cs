@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using TicTacToe.API.DTOs;
 using TicTacToe.API.Services;
 
 namespace TicTacToe.IntegrationTests
@@ -10,7 +11,7 @@ namespace TicTacToe.IntegrationTests
         public Task SetAsync<T>(string key, T value, TimeSpan? expiry = null)
         {
             var json = JsonSerializer.Serialize(value);
-            var expiration = expiry.HasValue ? DateTimeOffset.UtcNow.Add(expiry.Value) : (DateTimeOffset?)null;
+            DateTimeOffset? expiration = expiry.HasValue ? DateTimeOffset.UtcNow.Add(expiry.Value) : null;
             _store[key] = (json, expiration);
             return Task.CompletedTask;
         }
@@ -21,15 +22,10 @@ namespace TicTacToe.IntegrationTests
             {
                 if (entry.expiry == null || entry.expiry > DateTimeOffset.UtcNow)
                 {
-                    var obj = JsonSerializer.Deserialize<T>(entry.value);
-                    return Task.FromResult<T?>(obj);
+                    return Task.FromResult(JsonSerializer.Deserialize<T>(entry.value));
                 }
-                else
-                {
-                    _store.Remove(key);
-                }
+                _store.Remove(key);
             }
-
             return Task.FromResult<T?>(default);
         }
 
@@ -37,6 +33,40 @@ namespace TicTacToe.IntegrationTests
         {
             _store.Remove(key);
             return Task.CompletedTask;
+        }
+
+        public async Task SetPreviousMoveAsync(int gameId, MoveDto move)
+        {
+            await SetAsync($"game:{gameId}:last_move", move, TimeSpan.FromHours(1));
+        }
+
+        public async Task<MoveDto?> GetPreviousMoveAsync(int gameId)
+        {
+            return await GetAsync<MoveDto>($"game:{gameId}:last_move");
+        }
+
+        public async Task ClearPreviousMoveAsync(int gameId)
+        {
+            await RemoveAsync($"game:{gameId}:last_move");
+        }
+
+        public void CleanExpiredEntries()
+        {
+            var now = DateTimeOffset.UtcNow;
+            var expiredKeys = new List<string>();
+
+            foreach (var kvp in _store)
+            {
+                if (kvp.Value.expiry != null && kvp.Value.expiry <= now)
+                {
+                    expiredKeys.Add(kvp.Key);
+                }
+            }
+
+            foreach (var key in expiredKeys)
+            {
+                _store.Remove(key);
+            }
         }
     }
 }
