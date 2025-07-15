@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -17,6 +18,7 @@ namespace TicTacToe.API.Controllers
     {
         private readonly IMoveService _moveService;
         private readonly ILogger<MovesController> _logger;
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _semaphores = new();
 
         /// <summary>
         /// Конструктор контроллера ходов
@@ -44,13 +46,20 @@ namespace TicTacToe.API.Controllers
         [HttpPost]
         public async Task<IActionResult> MakeMove(int gameId, [FromBody] MoveDto moveDto)
         {
+            var cacheKey = $"move_{gameId}_{moveDto.Col}_{moveDto.Row}_{moveDto.Player}";
+            var semaphore = GetSemaphore(cacheKey);
+
+            if (!await semaphore.WaitAsync(TimeSpan.FromSeconds(5)))
+                return StatusCode(503, "Server busy");
+
             try
             {
                 _logger.LogTrace("Начало обработки хода игры {GameId}", gameId);
                 var existingResult = await _moveService.GetCachedMoveResultAsync(gameId, moveDto);
                 if (existingResult != null)
                 {
-                    Response.Headers.ETag = $"\"{existingResult.ETag}\"";
+                    Response.Headers["ETag"] = $"\"{existingResult.ETag}\"";
+
                     return Ok(existingResult.Response);
                 }
 
@@ -68,7 +77,7 @@ namespace TicTacToe.API.Controllers
                     return Conflict("Game has been finished");
                 }
 
-                var etag = GenerateETag(game);
+                var etag = GenerateETag(game, moveDto);
 
                 var result = new CreatedMoveDto
                 {
@@ -106,6 +115,10 @@ namespace TicTacToe.API.Controllers
                 _logger.LogError("Непредвиденная ошибка: {Exception}", ex);
                 return StatusCode(500, ex.Message);
             }
+            finally
+            {
+                ReleaseAndCleanup(cacheKey, semaphore);
+            }
         }
 
         /// <summary>
@@ -113,12 +126,38 @@ namespace TicTacToe.API.Controllers
         /// </summary>
         /// <param name="game">Объект игры</param>
         /// <returns>Хеш-строка, представляющая текущее состояние игры</returns>
-        private string GenerateETag(Game game)
+        protected virtual string GenerateETag(Game game, MoveDto moveDto)
         {
-            var json = JsonSerializer.Serialize(game.BoardState);
+            var dataToHash = new
+            {
+                Board = game.BoardState,
+                Move = moveDto
+            };
+
+            var json = JsonSerializer.Serialize(dataToHash);
             using var sha = SHA256.Create();
             var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(json));
             return Convert.ToBase64String(hash);
+        }
+
+        private SemaphoreSlim GetSemaphore(string key)
+        {
+            return _semaphores.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        }
+
+        private void ReleaseAndCleanup(string key, SemaphoreSlim semaphore)
+        {
+            try
+            {
+                semaphore.Release();
+            }
+            finally
+            {
+                if (semaphore.CurrentCount == 1)
+                {
+                    _semaphores.TryRemove(key, out _);
+                }
+            }
         }
     }
 }
