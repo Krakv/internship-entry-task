@@ -19,6 +19,14 @@ jobs:
   integration-tests:
     needs: unit-tests 
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: tic_tac_toe
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin
+        ports: ["5432:5432"]
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v3
